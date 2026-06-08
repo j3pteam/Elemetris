@@ -58,8 +58,9 @@ CONFIG = {
 
     "logo_url": os.environ.get("BRAND_LOGO_URL", "/full_logo.png"),
     "favicon_url": os.environ.get("BRAND_FAVICON_URL", "/monogram.jpg"),
-    "navy": os.environ.get("BRAND_NAVY", "#101418"),
+    "navy": os.environ.get("BRAND_NAVY", "#10357F"),
     "gold": os.environ.get("BRAND_GOLD", "#0074F8"),
+    "cyan": os.environ.get("BRAND_CYAN", "#00BAFC"),
     "paper": os.environ.get("BRAND_PAPER", "#F6F8FB"),
 
     "footer_disclaimer": os.environ.get(
@@ -149,6 +150,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
     :root {
       --navy: {{ cfg.navy }};
       --gold: {{ cfg.gold }};
+      --cyan: {{ cfg.cyan }};
       --paper: {{ cfg.paper }};
       --paper-2: #FFFFFF;
       --line: rgba(16, 20, 24, 0.12);
@@ -171,7 +173,7 @@ INDEX_HTML = r"""<!DOCTYPE html>
       background: var(--navy); color: var(--paper-2);
       padding: 1rem 1.75rem;
       display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 2px solid var(--gold);
+      border-bottom: 2px solid var(--cyan);
     }
     .brand { display: flex; align-items: center; gap: 1rem; }
     .brand-logo { height: 60px; width: auto; display: block; }
@@ -831,14 +833,14 @@ def serve_jpg(filename):
 
 ADMIN_LOGIN_HTML = """<!DOCTYPE html><html><head><title>Admin Login</title>
 <style>
-body { font-family: -apple-system, sans-serif; background: #101418; color: #fff;
+body { font-family: -apple-system, sans-serif; background: #10357F; color: #fff;
        display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
 .box { background: #fff; color: #101418; padding: 2rem 2.5rem; border-radius: 4px;
        border-top: 3px solid #0074F8; min-width: 300px; }
 h1 { margin: 0 0 1rem 0; font-size: 1.1rem; letter-spacing: 0.1em; text-transform: uppercase; color: #101418; }
 input { width: 100%; padding: 0.7rem; border: 1px solid #ccc; border-radius: 2px; font-size: 1rem; margin-bottom: 1rem; }
 input:focus { outline: none; border-color: #0074F8; }
-button { width: 100%; padding: 0.7rem; background: #101418; color: #0074F8; border: none;
+button { width: 100%; padding: 0.7rem; background: #10357F; color: #fff; border: none;
          border-radius: 2px; cursor: pointer; letter-spacing: 0.15em; text-transform: uppercase; font-size: 0.85rem; }
 button:hover { background: #0074F8; color: #101418; }
 .err { color: #C0392B; font-size: 0.85rem; margin-bottom: 0.5rem; }
@@ -854,9 +856,9 @@ ADMIN_HTML = """<!DOCTYPE html><html><head>
 <title>Admin — {{ cfg.persona_name }}</title>
 <link rel="icon" href="{{ cfg.favicon_url }}" />
 <style>
-:root { --navy: #101418; --gold: #0074F8; --rust: #C0392B; --paper: #F6F8FB; --line: rgba(16,20,24,0.12); }
+:root { --navy: #10357F; --gold: #0074F8; --cyan: #00BAFC; --rust: #C0392B; --paper: #F6F8FB; --line: rgba(16,20,24,0.12); }
 body { font-family: -apple-system, sans-serif; background: var(--paper); color: var(--navy); margin: 0; }
-header { background: var(--navy); color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--gold); }
+header { background: var(--navy); color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--cyan); }
 header h1 { margin: 0; font-size: 1rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 400; }
 header a { color: rgba(0,116,248,0.7); text-decoration: none; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; }
 header a:hover { color: var(--gold); }
