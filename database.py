@@ -51,6 +51,18 @@ def init_schema():
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
+
+            # Auto-heal: this database may carry tables left over from a
+            # different app (e.g. a multi-bot schema with bot_id / account
+            # columns). Our CREATE TABLE IF NOT EXISTS won't fix those, and
+            # inserts then fail on NOT-NULL columns we don't populate. Detect
+            # the tell-tale incompatible columns and drop so we rebuild clean.
+            if _table_exists(cur, 'documents') and _column_exists(cur, 'documents', 'bot_id'):
+                cur.execute("DROP TABLE IF EXISTS chunks CASCADE;")
+                cur.execute("DROP TABLE IF EXISTS documents CASCADE;")
+            if _table_exists(cur, 'feedback') and not _column_exists(cur, 'feedback', 'persona'):
+                cur.execute("DROP TABLE IF EXISTS feedback CASCADE;")
+
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS documents (
                     id SERIAL PRIMARY KEY,
@@ -130,6 +142,15 @@ def _table_exists(cur, table_name: str) -> bool:
     cur.execute(
         "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = %s);",
         (table_name,),
+    )
+    return cur.fetchone()["exists"]
+
+
+def _column_exists(cur, table_name: str, column_name: str) -> bool:
+    cur.execute(
+        "SELECT EXISTS (SELECT FROM information_schema.columns "
+        "WHERE table_name = %s AND column_name = %s);",
+        (table_name, column_name),
     )
     return cur.fetchone()["exists"]
 
