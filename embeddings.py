@@ -20,7 +20,7 @@ except ImportError:
 # but we'll keep the constant names generic for forward compatibility.
 HAS_OPENAI = HAS_VOYAGE  # alias for backward compat with app.py
 
-VOYAGE_API_KEY = os.environ.get("VOYAGE_API_KEY")
+VOYAGE_API_KEY = (os.environ.get("VOYAGE_API_KEY") or "").strip() or None
 EMBEDDING_MODEL = "voyage-3-lite"  # 512 dims, generous free tier
 EMBEDDING_DIM = 512
 
