@@ -232,6 +232,31 @@ INDEX_HTML = r"""<!DOCTYPE html>
     .feedback-btn.selected-down { background: var(--rust); border-color: var(--rust); color: #fff; }
     .feedback-btn:disabled { cursor: default; }
     .feedback-thanks { font-size: 0.7rem; color: var(--muted); margin-left: 0.4rem; font-style: italic; }
+    .msg-actions { margin-left: auto; display: flex; gap: 0.4rem; position: relative; }
+    .action-btn {
+      background: transparent; border: 1px solid var(--line); color: var(--muted);
+      height: 30px; padding: 0 0.7rem; border-radius: 15px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 0.35rem; font-family: inherit;
+      font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+      transition: all 0.18s ease;
+    }
+    .action-btn svg { width: 14px; height: 14px; }
+    .action-btn:hover { border-color: var(--gold); color: var(--navy); background: var(--paper); }
+    .action-btn.copied { border-color: var(--navy); color: var(--navy); }
+    .share-menu {
+      position: absolute; right: 0; bottom: calc(100% + 6px);
+      background: var(--paper-2); border: 1px solid var(--line); border-radius: 6px;
+      box-shadow: var(--shadow); padding: 0.3rem; display: none;
+      flex-direction: column; min-width: 160px; z-index: 30;
+    }
+    .share-menu.open { display: flex; }
+    .share-menu a, .share-menu button {
+      display: block; width: 100%; padding: 0.55rem 0.7rem; font-size: 0.82rem;
+      color: var(--text); text-decoration: none; background: transparent; border: none;
+      border-radius: 4px; cursor: pointer; font-family: inherit; text-align: left;
+      text-transform: none; letter-spacing: normal;
+    }
+    .share-menu a:hover, .share-menu button:hover { background: var(--paper); color: var(--navy); }
     .feedback-comment {
       margin-top: 0.7rem;
       padding-top: 0.7rem;
@@ -348,6 +373,9 @@ INDEX_HTML = r"""<!DOCTYPE html>
       input[type="text"] { padding: 0.75rem 3rem 0.75rem 0.9rem; font-size: 16px; }
       button[type="submit"] { padding: 0.75rem 1rem; font-size: 0.66rem; letter-spacing: 0.1em; }
       .footer-note { font-size: 0.6rem; padding: 0 0.8rem 0.8rem; }
+      .feedback { flex-wrap: wrap; gap: 0.35rem; }
+      .action-btn { padding: 0 0.55rem; }
+      .action-btn .btn-label { display: none; }
     }
   </style>
 </head>
@@ -424,6 +452,22 @@ INDEX_HTML = r"""<!DOCTYPE html>
             <path d="M17 14V2"/><path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H17v12l-4.69 7.5a2 2 0 0 1-3.31-3.38z"/>
           </svg>
         </button>
+        <div class="msg-actions">
+          <button type="button" class="action-btn" data-action="copy" title="Copy answer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+            <span class="btn-label">Copy</span>
+          </button>
+          <button type="button" class="action-btn" data-action="share" title="Share answer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+            </svg>
+            <span class="btn-label">Share</span>
+          </button>
+          <div class="share-menu" role="menu"></div>
+        </div>
       `;
 
       async function sendFeedback(rating, comment) {
@@ -494,6 +538,67 @@ INDEX_HTML = r"""<!DOCTYPE html>
           }
         });
       });
+      // ----- Copy + Share controls -----
+      const copyBtn = wrap.querySelector('[data-action="copy"]');
+      const shareBtn = wrap.querySelector('[data-action="share"]');
+      const shareMenu = wrap.querySelector('.share-menu');
+
+      async function copyText() {
+        try {
+          if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(replyText);
+          } else {
+            const ta = document.createElement("textarea");
+            ta.value = replyText; ta.style.position = "fixed"; ta.style.opacity = "0";
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            document.execCommand("copy"); document.body.removeChild(ta);
+          }
+          const lbl = copyBtn.querySelector(".btn-label");
+          const prev = lbl ? lbl.textContent : "";
+          copyBtn.classList.add("copied");
+          if (lbl) lbl.textContent = "Copied";
+          setTimeout(() => {
+            copyBtn.classList.remove("copied");
+            if (lbl) lbl.textContent = prev || "Copy";
+          }, 1600);
+        } catch (err) {
+          console.error("Copy failed:", err);
+        }
+      }
+      copyBtn.addEventListener("click", copyText);
+
+      const enc = encodeURIComponent(replyText);
+      const subj = encodeURIComponent("From the Elemetris Advisor");
+
+      shareBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        // Mobile/native: one tap opens the system share sheet (email, messages, social, etc.)
+        if (navigator.share) {
+          try { await navigator.share({ title: "Elemetris Advisor", text: replyText }); return; }
+          catch (err) { if (err && err.name === "AbortError") return; }
+        }
+        // Desktop fallback: build a small menu of share targets
+        if (shareMenu.dataset.built !== "1") {
+          shareMenu.innerHTML = `
+            <a href="mailto:?subject=${subj}&body=${enc}">Email</a>
+            <a href="sms:?&body=${enc}">Text message</a>
+            <a href="https://wa.me/?text=${enc}" target="_blank" rel="noopener">WhatsApp</a>
+            <a href="https://twitter.com/intent/tweet?text=${enc}" target="_blank" rel="noopener">X (Twitter)</a>
+            <a href="https://www.linkedin.com/feed/?shareActive=true&text=${enc}" target="_blank" rel="noopener">LinkedIn</a>
+            <button type="button" data-action="copy-share">Copy text</button>
+          `;
+          shareMenu.querySelector('[data-action="copy-share"]')
+            .addEventListener("click", () => { copyText(); shareMenu.classList.remove("open"); });
+          shareMenu.querySelectorAll("a").forEach(a =>
+            a.addEventListener("click", () => shareMenu.classList.remove("open")));
+          shareMenu.dataset.built = "1";
+        }
+        shareMenu.classList.toggle("open");
+      });
+      document.addEventListener("click", (e) => {
+        if (!wrap.contains(e.target)) shareMenu.classList.remove("open");
+      });
+
       msgDiv.appendChild(wrap);
     }
 
