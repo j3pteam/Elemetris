@@ -332,9 +332,22 @@ INDEX_HTML = r"""<!DOCTYPE html>
     .footer-note a:hover { color: var(--rust); }
     @media (max-width: 640px) {
       .user { margin-left: 8%; } .assistant { margin-right: 6%; }
-      header { padding: 0.85rem 1rem; }
-      .brand-logo { height: 48px; } .brand-tag { font-size: 0.74rem; }
-      .brand { gap: 0.7rem; } .brand-divider { height: 30px; }
+      header { padding: 0.7rem 0.9rem; gap: 0.6rem; }
+      /* logo already shows "Elemetris / Be the Leader" — drop the redundant
+         label + divider on mobile so the button can't get pushed off-screen */
+      .brand { gap: 0.6rem; min-width: 0; flex: 1; overflow: hidden; }
+      .brand-logo { height: 40px; }
+      .brand-divider, .brand-tag { display: none; }
+      header button {
+        flex-shrink: 0; white-space: nowrap;
+        padding: 0.45rem 0.7rem; font-size: 0.62rem; letter-spacing: 0.1em;
+      }
+      #chat { padding: 1.5rem 1rem 0.75rem; }
+      form { gap: 0.45rem; padding: 0.75rem 0.9rem; }
+      /* 16px keeps iOS Safari from auto-zooming when the field is focused */
+      input[type="text"] { padding: 0.75rem 3rem 0.75rem 0.9rem; font-size: 16px; }
+      button[type="submit"] { padding: 0.75rem 1rem; font-size: 0.66rem; letter-spacing: 0.1em; }
+      .footer-note { font-size: 0.6rem; padding: 0 0.8rem 0.8rem; }
     }
   </style>
 </head>
